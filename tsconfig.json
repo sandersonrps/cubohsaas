@@ -6,6 +6,8 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "noEmitOnError": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "ignoreDeprecations": "5.0",
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -15,6 +17,8 @@
     "jsx": "react-jsx",
 
     "strict": false,
+    "noErrorTruncation": true,
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
     }

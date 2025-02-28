@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '../../lib/utils';
 import { Badge } from '../ui/badge';
 import { AlertCircle, CheckCircle2, Clock, DollarSign, Search, Trash2, Users } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ContaReceber {
   id: string;

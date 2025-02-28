@@ -204,53 +204,6 @@ const Navbar = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Notifications Dialog */}
-      <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Notificações</DialogTitle>
-            <DialogDescription>
-              Suas notificações e alertas recentes
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-            {notifications.length > 0 ? (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 rounded-lg border ${notification.read ? "bg-white dark:bg-gray-950" : "bg-blue-50 dark:bg-blue-950"}`}
-                >
-                  <div className="flex justify-between items-start">
-                    <h4 className="text-sm font-medium">
-                      {notification.title}
-                    </h4>
-                    <span className="text-xs text-gray-500">
-                      {notification.time}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {notification.description}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-6">
-                <Bell className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Nenhuma notificação</p>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-between mt-4">
-            <Button variant="outline" size="sm">
-              Marcar todas como lidas
-            </Button>
-            <Button variant="outline" size="sm">
-              Ver todas
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

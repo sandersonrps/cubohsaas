@@ -1,4 +1,5 @@
 import React from "react";
+import { Card, Metric, Text, Title, Grid } from "@tremor/react";
 import SalesMetricsChart from "./SalesMetricsChart";
 import CustomerGrowthChart from "./CustomerGrowthChart";
 import PendingTasksList from "./PendingTasksList";
@@ -48,14 +49,14 @@ const DashboardContent = ({
     yearly: [74600, 98000, 125000],
   },
   customerData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
     datasets: [
       {
-        name: "New Customers",
+        name: "Novos Clientes",
         data: [45, 52, 38, 60, 93, 84],
       },
       {
-        name: "Returning Customers",
+        name: "Clientes Recorrentes",
         data: [35, 41, 62, 78, 88, 95],
       },
     ],
@@ -63,9 +64,9 @@ const DashboardContent = ({
   tasks = [
     {
       id: "1",
-      title: "Contact new leads from marketing campaign",
+      title: "Contatar novos leads da campanha de marketing",
       description:
-        "Reach out to the new leads that came in from our Q2 email marketing campaign and schedule initial calls.",
+        "Entrar em contato com os novos leads que vieram da nossa campanha de email marketing do Q2 e agendar chamadas iniciais.",
       dueDate: "2023-06-15",
       priority: "high",
       assignee: "Maria Silva",
@@ -73,9 +74,9 @@ const DashboardContent = ({
     },
     {
       id: "2",
-      title: "Prepare quarterly sales report",
+      title: "Preparar relatório trimestral de vendas",
       description:
-        "Compile sales data from Q2 and prepare presentation for the executive team meeting.",
+        "Compilar dados de vendas do Q2 e preparar apresentação para a reunião da equipe executiva.",
       dueDate: "2023-06-20",
       priority: "medium",
       assignee: "João Santos",
@@ -83,9 +84,9 @@ const DashboardContent = ({
     },
     {
       id: "3",
-      title: "Update customer database",
+      title: "Atualizar banco de dados de clientes",
       description:
-        "Clean up customer records and update contact information for key accounts.",
+        "Limpar registros de clientes e atualizar informações de contato para contas principais.",
       dueDate: "2023-06-10",
       priority: "low",
       assignee: "Ana Costa",
@@ -99,73 +100,48 @@ const DashboardContent = ({
         name: "Ana Silva",
         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
       },
-      action: "editou",
-      target: "Proposta Comercial #1234",
-      timestamp: new Date(Date.now() - 1000 * 60 * 15),
+      action: "atualizou",
+      target: "perfil do cliente",
+      timestamp: new Date(),
       type: "edit",
-    },
-    {
-      id: "2",
-      user: {
-        name: "Carlos Mendes",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
-      },
-      action: "adicionou",
-      target: "Nova tarefa: Ligar para cliente XYZ",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      type: "add",
-    },
-    {
-      id: "3",
-      user: {
-        name: "Mariana Costa",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana",
-      },
-      action: "enviou mensagem para",
-      target: "Equipe de Vendas",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      type: "message",
     },
   ],
 }: DashboardContentProps) => {
   return (
-    <div className="w-full h-full p-6 bg-gray-50 dark:bg-gray-900 overflow-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Top row with charts */}
-        <div className="h-[450px]">
-          <SalesMetricsChart
-            data={salesData}
-            title="Métricas de Vendas"
-            description="Visão geral do desempenho de vendas"
-          />
-        </div>
-        <div className="h-[450px]">
-          <CustomerGrowthChart
-            data={customerData}
-            title="Crescimento de Clientes"
-            description="Métricas mensais de aquisição e retenção de clientes"
-          />
-        </div>
+    <div className="p-6 space-y-6">
+      {/* Cards de Métricas */}
+      <Grid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
+        <Card className="bg-white shadow-sm">
+          <Text>Total de Imóveis</Text>
+          <Metric>1,269</Metric>
+          <Text className="text-sm text-green-600">+12% em relação ao mês anterior</Text>
+        </Card>
+        <Card className="bg-white shadow-sm">
+          <Text>Vendas este Mês</Text>
+          <Metric>R$ 67.000</Metric>
+          <Text className="text-sm text-green-600">+8% em relação ao mês anterior</Text>
+        </Card>
+        <Card className="bg-white shadow-sm">
+          <Text>Contratos Ativos</Text>
+          <Metric>842</Metric>
+          <Text className="text-sm text-blue-600">98% de renovação</Text>
+        </Card>
+        <Card className="bg-white shadow-sm">
+          <Text>Visitas Agendadas</Text>
+          <Metric>28</Metric>
+          <Text className="text-sm text-orange-600">Próximos 7 dias</Text>
+        </Card>
+      </Grid>
 
-        {/* Bottom row with tasks and activity */}
-        <div className="h-[450px]">
-          <PendingTasksList
-            tasks={tasks}
-            onMarkComplete={(taskId) =>
-              console.log(`Task ${taskId} marked as complete`)
-            }
-            onViewDetails={(task) =>
-              console.log(`Viewing details for task: ${task.title}`)
-            }
-          />
-        </div>
-        <div className="h-[450px]">
-          <ActivityTrackingPanel
-            activities={activities}
-            title="Atividades Recentes da Equipe"
-          />
-        </div>
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SalesMetricsChart data={salesData} />
+        <CustomerGrowthChart data={customerData} />
       </div>
+
+      {/* Lista de Tarefas */}
+      <PendingTasksList tasks={tasks} />
+      <ActivityTrackingPanel activities={activities} />
     </div>
   );
 };

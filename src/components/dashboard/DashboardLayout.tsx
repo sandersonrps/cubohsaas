@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import DashboardContent from "./DashboardContent";
 import { useAuth } from "../../contexts/AuthContext";
+import { Toaster } from "sonner";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -48,6 +49,7 @@ const DashboardLayout = ({
 
   return (
     <div className="flex h-screen w-full bg-white dark:bg-gray-950">
+      <Toaster richColors position="top-right" />
       {/* Sidebar */}
       <div className="h-full">
         <Sidebar
@@ -55,6 +57,12 @@ const DashboardLayout = ({
           onToggle={handleToggleSidebar}
           onNavigate={handleNavigate}
           activePath={currentPath}
+          items={[
+            { label: "Início", path: "/dashboard", icon: "Home" },
+            { label: "Clientes", path: "/customers", icon: "Users" },
+            { label: "Vendas", path: "/sales", icon: "BarChart" },
+            { label: "Imóveis", path: "/properties", icon: "Building2" },
+          ]}
         />
       </div>
 

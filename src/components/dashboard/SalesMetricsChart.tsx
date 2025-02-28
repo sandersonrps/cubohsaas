@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,15 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { TrendingUp, DollarSign } from "lucide-react";
 import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
   BarChart,
-  LineChart,
-  TrendingUp,
-  DollarSign,
-  Users,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+  Bar,
+  Legend
+} from "recharts";
 
 interface SalesMetricsChartProps {
   title?: string;
@@ -32,169 +36,124 @@ interface SalesMetricsChartProps {
     quarterly: number[];
     yearly: number[];
   };
-  labels?: string[];
+  labels?: {
+    monthly: string[];
+    quarterly: string[];
+    yearly: string[];
+  };
   percentage?: number;
   isPositive?: boolean;
 }
 
 const SalesMetricsChart = ({
-  title = "Sales Metrics",
-  description = "Overview of your sales performance",
+  title = "Métricas de Vendas",
+  description = "Visão geral do desempenho de vendas",
   data = {
-    monthly: [
-      4500, 3500, 5200, 6100, 4800, 5300, 6500, 7200, 6800, 7500, 8200, 9000,
-    ],
+    monthly: [4500, 3500, 5200, 6100, 4800, 5300, 6500, 7200, 6800, 7500, 8200, 9000],
     quarterly: [13200, 16200, 20500, 24700],
     yearly: [74600, 98000, 125000],
   },
   labels = {
-    monthly: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ],
-    quarterly: ["Q1", "Q2", "Q3", "Q4"],
+    monthly: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+    quarterly: ["T1", "T2", "T3", "T4"],
     yearly: ["2021", "2022", "2023"],
-  }["monthly"],
+  },
   percentage = 12.5,
   isPositive = true,
 }: SalesMetricsChartProps) => {
-  const [period, setPeriod] = useState<"monthly" | "quarterly" | "yearly">(
-    "monthly",
-  );
-  const [chartType, setChartType] = useState<"bar" | "line">("bar");
+  const [period, setPeriod] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+  const [chartType, setChartType] = useState<"area" | "bar">("area");
 
-  // This would be replaced with actual chart rendering using ECharts
-  const renderChart = () => {
-    const currentData = data[period];
-    const currentLabels = {
-      monthly: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      quarterly: ["Q1", "Q2", "Q3", "Q4"],
-      yearly: ["2021", "2022", "2023"],
-    }[period];
+  // Preparar dados para o gráfico
+  const chartData = data[period].map((value, index) => ({
+    name: labels[period][index],
+    valor: value,
+  }));
 
-    return (
-      <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-        <div className="text-center">
-          {chartType === "bar" ? (
-            <BarChart className="h-10 w-10 mx-auto mb-2 text-primary" />
-          ) : (
-            <LineChart className="h-10 w-10 mx-auto mb-2 text-primary" />
-          )}
-          <p className="text-sm text-muted-foreground">
-            Chart visualization would render here using ECharts
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-2">
-            {currentData.map((value, index) => (
-              <div key={index} className="flex justify-between text-xs">
-                <span>{currentLabels[index]}</span>
-                <span className="font-medium">${value.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  // Formatar valores em reais
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
   return (
-    <Card className="w-full h-full bg-white dark:bg-gray-950 shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">{title}</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              {description}
-            </CardDescription>
+            <CardTitle className="text-xl font-bold">{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
           </div>
-          <div className="flex items-center space-x-2">
-            <div
-              className={`flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${isPositive ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"}`}
-            >
-              {isPositive ? (
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3 mr-1" />
-              )}
-              {percentage}%
-            </div>
+          <div className="flex items-center space-x-4">
+            <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione o período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Mensal</SelectItem>
+                <SelectItem value="quarterly">Trimestral</SelectItem>
+                <SelectItem value="yearly">Anual</SelectItem>
+              </SelectContent>
+            </Select>
+            <Tabs value={chartType} onValueChange={(value: any) => setChartType(value)}>
+              <TabsList>
+                <TabsTrigger value="area">
+                  <TrendingUp className="h-4 w-4" />
+                </TabsTrigger>
+                <TabsTrigger value="bar">
+                  <DollarSign className="h-4 w-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-4">
-          <Tabs
-            defaultValue="bar"
-            className="w-24"
-            onValueChange={(value) => setChartType(value as "bar" | "line")}
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="bar" className="text-xs px-2 py-1">
-                <BarChart className="h-3 w-3" />
-              </TabsTrigger>
-              <TabsTrigger value="line" className="text-xs px-2 py-1">
-                <LineChart className="h-3 w-3" />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <Select
-            defaultValue="monthly"
-            onValueChange={(value) =>
-              setPeriod(value as "monthly" | "quarterly" | "yearly")
-            }
-          >
-            <SelectTrigger className="w-32 h-8 text-xs">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="quarterly">Quarterly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {renderChart()}
-
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-            <DollarSign className="h-5 w-5 text-primary mb-1" />
-            <span className="text-sm font-medium">$9,850</span>
-            <span className="text-xs text-muted-foreground">Revenue</span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-            <Users className="h-5 w-5 text-primary mb-1" />
-            <span className="text-sm font-medium">124</span>
-            <span className="text-xs text-muted-foreground">Customers</span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-            <TrendingUp className="h-5 w-5 text-primary mb-1" />
-            <span className="text-sm font-medium">18.2%</span>
-            <span className="text-xs text-muted-foreground">Growth</span>
-          </div>
+        <div className="h-[400px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "area" ? (
+              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis tickFormatter={formatCurrency} />
+                <Tooltip 
+                  formatter={(value) => [formatCurrency(value as number), "Valor"]}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valor"
+                  stroke="#3b82f6"
+                  fillOpacity={1}
+                  fill="url(#colorValue)"
+                />
+              </AreaChart>
+            ) : (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis tickFormatter={formatCurrency} />
+                <Tooltip
+                  formatter={(value) => [formatCurrency(value as number), "Valor"]}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc' }}
+                />
+                <Legend />
+                <Bar
+                  dataKey="valor"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>

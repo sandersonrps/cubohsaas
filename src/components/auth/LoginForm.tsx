@@ -1,204 +1,140 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Checkbox } from "../ui/checkbox";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../ui/form";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Mail, Lock } from "lucide-react";
+
+interface LoginFormProps {
+  onSuccess?: () => void;
+  error?: string;
+  onLogin?: (data: LoginFormValues) => Promise<void>;
+}
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Email inválido" }),
-  password: z
-    .string()
-    .min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  rememberMe: z.boolean().default(false),
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-interface LoginFormProps {
-  onSubmit?: (data: LoginFormValues) => void;
-  onForgotPassword?: () => void;
-  onRegister?: () => void;
-  isLoading?: boolean;
-  error?: string;
-}
-
-const LoginForm = ({
-  onSubmit = () => {},
-  onForgotPassword = () => {},
-  onRegister = () => {},
-  isLoading = false,
-  error = "",
-}: LoginFormProps) => {
-  const [showPassword, setShowPassword] = useState(false);
-
-  const form = useForm<LoginFormValues>({
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, error, onLogin }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
   });
 
-  const handleSubmit = (values: LoginFormValues) => {
-    onSubmit(values);
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      // Se onLogin foi fornecido, use-o para autenticar
+      if (onLogin) {
+        await onLogin(data);
+      } else {
+        // Fallback para o comportamento anterior
+        onSuccess?.();
+      }
+      
+      // Mostrar mensagem de sucesso após o login bem-sucedido
+      toast.success("Login realizado com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao fazer login", {
+        description: error?.message || "Não foi possível realizar o login",
+      });
+    }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white dark:bg-gray-950 shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-        <CardDescription className="text-center">
-          Entre com suas credenciais para acessar o sistema
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 p-3 rounded-md mb-4 text-sm">
-            {error}
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Acesse sua conta
+        </h2>
+        <p className="text-gray-600 mt-2">
+          Insira suas credenciais para continuar
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+            E-mail
+          </Label>
+          <div className="mt-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              className="pl-10"
+              {...register("email")}
+            />
           </div>
-        )}
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="seu@email.com"
-                        type="email"
-                        className="pl-10"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+            Senha
+          </Label>
+          <div className="mt-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              className="pl-10"
+              {...register("password")}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Senha</FormLabel>
-                    <Button
-                      variant="link"
-                      className="px-0 font-normal text-xs"
-                      type="button"
-                      onClick={onForgotPassword}
-                    >
-                      Esqueceu a senha?
-                    </Button>
-                  </div>
-                  <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        className="pl-10"
-                        {...field}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1 h-7 w-7"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="rememberMe"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm font-normal leading-none">
-                      Lembrar-me
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-4">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Ou continue com
-            </span>
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-primary rounded border-gray-300"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              Lembrar de mim
+            </label>
+          </div>
+
+          <div className="text-sm">
+            <a
+              href="/recuperar-senha"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Esqueceu a senha?
+            </a>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" type="button" className="w-full">
-            Google
-          </Button>
-          <Button variant="outline" type="button" className="w-full">
-            Microsoft
-          </Button>
-        </div>
-        <div className="text-center text-sm">
-          Não tem uma conta?{" "}
-          <Button variant="link" className="p-0" onClick={onRegister}>
-            Registre-se
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Entrando..." : "Entrar"}
+        </Button>
+      </form>
+    </div>
   );
 };
 

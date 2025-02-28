@@ -1,110 +1,97 @@
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import { motion } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface AuthLayoutProps {
-  defaultTab?: "login" | "register";
-  onLogin?: (data: {
-    email: string;
-    password: string;
-    rememberMe: boolean;
-  }) => void;
-  onRegister?: (data: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) => void;
-  isLoading?: boolean;
   error?: string;
+  onLogin?: (data: { email: string; password: string; rememberMe: boolean }) => Promise<void>;
+  onRegister?: (data: { name: string; email: string; password: string; confirmPassword: string }) => Promise<void>;
+  isLoading?: boolean;
+  defaultTab?: "login" | "register";
 }
 
-const AuthLayout = ({
-  defaultTab = "login",
-  onLogin = () => {},
-  onRegister = () => {},
+const AuthLayout: React.FC<AuthLayoutProps> = ({
+  error,
+  onLogin,
+  onRegister,
   isLoading = false,
-  error = "",
-}: AuthLayoutProps) => {
+  defaultTab = "login",
+}) => {
   const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
 
-  const handleLoginSubmit = (data: {
-    email: string;
-    password: string;
-    rememberMe: boolean;
-  }) => {
-    onLogin(data);
-  };
-
-  const handleRegisterSubmit = (data: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) => {
-    onRegister(data);
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="w-full bg-white dark:bg-gray-950 shadow-xl border-0">
-          <CardHeader className="pb-0">
-            <CardTitle className="text-2xl font-bold text-center">
-              CRM System
-            </CardTitle>
-            <CardDescription className="text-center">
-              Gerencie seus clientes, vendas e equipe em um só lugar
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Lado Esquerdo - Logo e Título */}
+      <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-gradient-to-br from-blue-600 to-primary">
+        <div className="max-w-md text-center text-white">
+          <img 
+            src="./logo.png" 
+            alt="Cuboh Logo" 
+            className="w-48 h-48 mx-auto mb-8"
+          />
+          <h1 className="text-4xl font-bold mb-4">
+            Cuboh SaaS
+          </h1>
+          <p className="text-xl">
+            Sistema de Gestão em Módulos
+          </p>
+        </div>
+      </div>
+
+      {/* Lado Direito - Login/Registro */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+        <div className="w-full max-w-md">
+          {/* Logo para Mobile */}
+          <div className="lg:hidden text-center mb-8">
+            <img 
+              src="./logo.png" 
+              alt="Cuboh Logo" 
+              className="w-24 h-24 mx-auto mb-4"
+            />
+            <h2 className="text-2xl font-bold text-gray-900">Cuboh SaaS</h2>
+          </div>
+
+          <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
             <Tabs
-              value={activeTab}
+              defaultValue={activeTab}
               onValueChange={(value) =>
                 setActiveTab(value as "login" | "register")
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
                 <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Registrar</TabsTrigger>
+                <TabsTrigger value="register">Cadastro</TabsTrigger>
               </TabsList>
+
+              {error && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <TabsContent value="login" className="mt-0">
                 <LoginForm
-                  onSubmit={handleLoginSubmit}
-                  onRegister={() => setActiveTab("register")}
-                  isLoading={isLoading}
+                  onLogin={onLogin}
                   error={activeTab === "login" ? error : ""}
                 />
               </TabsContent>
+
               <TabsContent value="register" className="mt-0">
                 <RegisterForm
-                  onSubmit={handleRegisterSubmit}
+                  onSubmit={onRegister}
+                  error={activeTab === "register" ? error : ""}
                   onLoginClick={() => setActiveTab("login")}
                 />
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>© 2023 CRM System. Todos os direitos reservados.</p>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

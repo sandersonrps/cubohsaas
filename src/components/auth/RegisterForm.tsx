@@ -44,13 +44,15 @@ const formSchema = z
   });
 
 interface RegisterFormProps {
-  onSubmit?: (values: z.infer<typeof formSchema>) => void;
+  onSubmit?: (values: z.infer<typeof formSchema>) => Promise<void>;
   onLoginClick?: () => void;
+  error?: string;
 }
 
 const RegisterForm = ({
-  onSubmit = () => {},
+  onSubmit = async () => {},
   onLoginClick = () => {},
+  error = ""
 }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -65,8 +67,15 @@ const RegisterForm = ({
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(values);
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await onSubmit(values);
+      toast.success("Conta criada com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao criar conta", {
+        description: error?.message || "Não foi possível criar a conta",
+      });
+    }
   };
 
   return (

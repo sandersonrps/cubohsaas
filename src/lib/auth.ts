@@ -26,6 +26,8 @@ export const signUp = async ({ email, password, name }: SignUpData) => {
       data: {
         user_name: name,
       },
+      emailRedirectTo: undefined,
+      emailConfirm: false
     },
   });
 
@@ -49,13 +51,19 @@ export const signUp = async ({ email, password, name }: SignUpData) => {
   return data;
 };
 
-export const signIn = async ({ email, password }: SignInData) => {
+export const signIn = async ({ email, password, rememberMe = true }: SignInData) => {
+  // Configure as opções de persistência da sessão com base no rememberMe
+  const persistOptions = {
+    persistSession: rememberMe
+  };
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
-  });
+  }, persistOptions);
 
   if (error) {
+    console.error("Login error:", error);
     throw error;
   }
 
@@ -82,28 +90,43 @@ export const signOut = async () => {
 };
 
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
-  const { data } = await supabase.auth.getUser();
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      if (error.message?.includes("Refresh Token")) {
+        // Clear the session if refresh token is invalid
+        await supabase.auth.signOut();
+        throw error;
+      }
+      console.error("Auth error:", error);
+      return null;
+    }
 
-  if (!data.user) {
-    return null;
+    if (!data.user) {
+      return null;
+    }
+
+    // Get additional user data from our users table
+    const { data: userData, error: userDataError } = await supabase
+      .from("users")
+      .select("user_name, is_active")
+      .eq("auth_id", data.user.id)
+      .single();
+
+    if (userDataError) {
+      console.error("Error fetching user data:", userDataError);
+    }
+
+    return {
+      id: data.user.id,
+      email: data.user.email || "",
+      user_name: userData?.user_name,
+    };
+  } catch (err) {
+    console.error("Error in getCurrentUser:", err);
+    throw err;
   }
-
-  // Get additional user data from our users table
-  const { data: userData, error } = await supabase
-    .from("users")
-    .select("user_name, is_active")
-    .eq("auth_id", data.user.id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching user data:", error);
-  }
-
-  return {
-    id: data.user.id,
-    email: data.user.email || "",
-    user_name: userData?.user_name,
-  };
 };
 
 export const isAuthenticated = async (): Promise<boolean> => {

@@ -26,8 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error loading user:", err);
+        // Handle refresh token errors by clearing the session
+        if (err.message?.includes("Refresh Token")) {
+          await handleSignOut();
+        }
       } finally {
         setIsLoading(false);
       }

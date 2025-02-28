@@ -24,7 +24,7 @@ create policy "Users can update their own data"
     for update
     using (auth.uid() = auth_id);
 
--- Create policy to allow service role to manage all users
+-- Create policy to allow service role to manage all users (full access for administrative purposes)
 create policy "Service role can manage all users"
     on public.users
     to service_role

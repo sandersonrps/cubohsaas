@@ -300,10 +300,39 @@ const CustomersPage: React.FC = () => {
     setIsReadOnly(false);
   };
 
+  const [hasAssociatedSales, setHasAssociatedSales] = useState(false);
+  const [associatedSalesNumbers, setAssociatedSalesNumbers] = useState<string[]>([]);
+
+  const checkAssociatedSales = async (customerId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('vendas')
+        .select('numero_venda')
+        .eq('cliente_id', customerId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setHasAssociatedSales(true);
+        setAssociatedSalesNumbers(data.map(sale => sale.numero_venda));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking associated sales:', error);
+      return false;
+    }
+  };
+
   const handleDelete = async () => {
     if (!selectedCustomerId) return;
-    
+
     try {
+      const hasSales = await checkAssociatedSales(selectedCustomerId);
+      if (hasSales) {
+        return; // Stop deletion process if there are associated sales
+      }
+
       const { error } = await supabase
         .from('clientes')
         .delete()
@@ -311,8 +340,8 @@ const CustomersPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Atualizar lista de clientes
       fetchCustomers();
-      fetchMetrics();
       resetForm();
       setIsDeleteDialogOpen(false);
       setIsDialogOpen(false);
@@ -330,22 +359,22 @@ const CustomersPage: React.FC = () => {
   const metricsCards = [
     {
       title: 'Total de Clientes',
-      value: metrics.total.toString(),
+      value: (metrics.total ?? 0).toString(),
       icon: <Users className="h-6 w-6 text-blue-600" />
     },
     {
       title: 'Clientes Ativos',
-      value: metrics.active.toString(),
+      value: (metrics.active ?? 0).toString(),
       icon: <UserCheck className="h-6 w-6 text-green-600" />
     },
     {
       title: 'Novos este mês',
-      value: metrics.newThisMonth.toString(),
+      value: (metrics.newThisMonth ?? 0).toString(),
       icon: <UserPlus className="h-6 w-6 text-purple-600" />
     },
     {
       title: 'Taxa de Retenção',
-      value: `${metrics.retentionRate}%`,
+      value: `${metrics.retentionRate ?? 0}%`,
       icon: <TrendingUp className="h-6 w-6 text-orange-600" />
     }
   ];
@@ -712,19 +741,42 @@ const CustomersPage: React.FC = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogTitle>{hasAssociatedSales ? 'Não é possível excluir' : 'Confirmar Exclusão'}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.</p>
+            {hasAssociatedSales ? (
+              <div className="space-y-4">
+                <p className="text-red-600 font-medium">Este cliente não pode ser excluído pois possui vendas associadas.</p>
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <p className="font-medium mb-2">Vendas associadas:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {associatedSalesNumbers.map((number, index) => (
+                      <li key={index} className="text-sm text-gray-600">Venda #{number}</li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-600">Para excluir este cliente, primeiro exclua todas as vendas associadas.</p>
+              </div>
+            ) : (
+              <p>Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.</p>
+            )}
           </div>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDelete}
-            >
-              Confirmar Exclusão
+            <Button variant="outline" onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setHasAssociatedSales(false);
+              setAssociatedSalesNumbers([]);
+            }}>
+              {hasAssociatedSales ? 'Fechar' : 'Cancelar'}
             </Button>
+            {!hasAssociatedSales && (
+              <Button 
+                variant="destructive" 
+                onClick={handleDelete}
+              >
+                Confirmar Exclusão
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

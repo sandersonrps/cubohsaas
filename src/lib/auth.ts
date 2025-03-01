@@ -91,13 +91,19 @@ export const signOut = async () => {
 
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
+    // First check the session
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      return null;
+    }
+
     const { data, error } = await supabase.auth.getUser();
     
     if (error) {
       if (error.message?.includes("Refresh Token")) {
         // Clear the session if refresh token is invalid
         await supabase.auth.signOut();
-        throw error;
+        throw new Error("Session expired. Please sign in again.");
       }
       console.error("Auth error:", error);
       return null;
@@ -106,22 +112,43 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     if (!data.user) {
       return null;
     }
-
     // Get additional user data from our users table
     const { data: userData, error: userDataError } = await supabase
       .from("users")
-      .select("user_name, is_active")
+      .select("user_name,is_active")
       .eq("auth_id", data.user.id)
       .single();
-
     if (userDataError) {
       console.error("Error fetching user data:", userDataError);
-    }
+      // If user data doesn't exist, create it
+      if (userDataError.code === "PGRST116") {
+        const { data: newUserData, error: insertError } = await supabase
+          .from("users")
+          .insert({
+            auth_id: data.user.id,
+            email: data.user.email,
+            user_name: data.user.user_metadata?.user_name
+          })
+          .select()
+          .single();
 
+        if (insertError) {
+          console.error("Error creating user data:", insertError);
+          throw new Error("Failed to create user profile");
+        }
+
+        return {
+          id: data.user.id,
+          email: data.user.email || "",
+          user_name: newUserData?.user_name
+        };
+      }
+      throw new Error("Failed to fetch user profile");
+    }
     return {
       id: data.user.id,
       email: data.user.email || "",
-      user_name: userData?.user_name,
+      user_name: userData?.user_name
     };
   } catch (err) {
     console.error("Error in getCurrentUser:", err);

@@ -342,27 +342,39 @@ const SalesPage: React.FC = () => {
 
       {/* New/Edit Sale Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{selectedSale ? 'Editar Venda' : 'Nova Venda'}</DialogTitle>
+        <DialogContent className="sm:max-w-[650px] p-6">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">{selectedSale ? 'Editar Venda' : 'Nova Venda'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Input
-                name="numero_venda"
-                type="text"
-                placeholder="Número da Venda"
-                className="col-span-4"
-                value={formData.numero_venda}
-                onChange={handleInputChange}
-              />
+          <div className="grid gap-6 py-6">
+            <div className="space-y-2">
+              <label htmlFor="numero_venda" className="text-sm font-medium">Número da Venda</label>
+              <div className="relative">
+                <Input
+                  id="numero_venda"
+                  name="numero_venda"
+                  type="text"
+                  placeholder="Número será gerado automaticamente se vazio"
+                  className="w-full focus:ring-2 focus:ring-primary/20"
+                  value={formData.numero_venda}
+                  onChange={handleInputChange}
+                  aria-required="true"
+                />
+                {!formData.numero_venda && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <span className="text-xs text-muted-foreground">Automático</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            
+            <div className="space-y-2">
+              <label htmlFor="cliente_id" className="text-sm font-medium">Cliente <span className="text-red-500">*</span></label>
               <Select
                 value={formData.cliente_id}
                 onValueChange={(value) => handleSelectChange('cliente_id', value)}
               >
-                <SelectTrigger className="w-full col-span-4">
+                <SelectTrigger id="cliente_id" className="w-full focus:ring-2 focus:ring-primary/20">
                   <SelectValue placeholder="Selecione o cliente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -373,52 +385,81 @@ const SalesPage: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {!formData.cliente_id && (
+                <p className="text-xs text-muted-foreground mt-1">Este campo é obrigatório</p>
+              )}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            
+            <div className="space-y-2">
+              <label htmlFor="produto" className="text-sm font-medium">Produto/Serviço <span className="text-red-500">*</span></label>
               <Input
+                id="produto"
                 name="produto"
                 type="text"
-                placeholder="Produto"
-                className="col-span-4"
+                placeholder="Nome do produto ou serviço"
+                className="w-full focus:ring-2 focus:ring-primary/20"
                 value={formData.produto}
                 onChange={handleInputChange}
+                aria-required="true"
               />
+              {!formData.produto && (
+                <p className="text-xs text-muted-foreground mt-1">Este campo é obrigatório</p>
+              )}
             </div>
-            <div className="grid grid-cols-2 items-center gap-4">
-              <Input
-                name="quantidade"
-                type="number"
-                placeholder="Quantidade"
-                value={formData.quantidade}
-                onChange={handleInputChange}
-                min={1}
-              />
-              <Input
-                name="valor_unitario"
-                type="number"
-                placeholder="Valor Unitário"
-                value={formData.valor_unitario}
-                onChange={handleInputChange}
-                min={0}
-                step={0.01}
-              />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="quantidade" className="text-sm font-medium">Quantidade</label>
+                <Input
+                  id="quantidade"
+                  name="quantidade"
+                  type="number"
+                  placeholder="Quantidade"
+                  className="w-full focus:ring-2 focus:ring-primary/20"
+                  value={formData.quantidade}
+                  onChange={handleInputChange}
+                  min={1}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Quantidade mínima: 1</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="valor_unitario" className="text-sm font-medium">Valor Unitário (R$)</label>
+                <Input
+                  id="valor_unitario"
+                  name="valor_unitario"
+                  type="number"
+                  placeholder="0,00"
+                  className="w-full focus:ring-2 focus:ring-primary/20"
+                  value={formData.valor_unitario}
+                  onChange={handleInputChange}
+                  min={0}
+                  step={0.01}
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            
+            <div className="space-y-2 bg-muted/20 p-3 rounded-md">
+              <label htmlFor="valor_total" className="text-sm font-medium">Valor Total (R$)</label>
               <Input
+                id="valor_total"
                 name="valor_total"
                 type="number"
                 placeholder="Valor Total"
-                className="col-span-4"
+                className="w-full bg-white focus:ring-2 focus:ring-primary/20 font-medium"
                 value={formData.valor_total}
                 readOnly
               />
+              <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente (Quantidade × Valor Unitário)</p>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            
+            <div className="space-y-2">
+              <label htmlFor="status" className="text-sm font-medium">Status da Venda</label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleSelectChange('status', value)}
               >
-                <SelectTrigger className="w-full col-span-4">
+                <SelectTrigger id="status" className="w-full focus:ring-2 focus:ring-primary/20">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -428,20 +469,25 @@ const SalesPage: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            
+            <div className="space-y-2">
+              <label htmlFor="observacoes" className="text-sm font-medium">Observações</label>
               <Input
+                id="observacoes"
                 name="observacoes"
                 type="text"
-                placeholder="Observações"
-                className="col-span-4"
+                placeholder="Informações adicionais sobre a venda"
+                className="w-full focus:ring-2 focus:ring-primary/20"
                 value={formData.observacoes}
                 onChange={handleInputChange}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit}>Salvar</Button>
+          <DialogFooter className="pt-4 border-t flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)} className="min-w-[100px]">Cancelar</Button>
+            <Button onClick={handleSubmit} className="min-w-[100px]">
+              {selectedSale ? 'Atualizar' : 'Salvar'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

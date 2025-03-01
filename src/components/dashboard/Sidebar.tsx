@@ -31,7 +31,22 @@ interface SidebarProps {
   onToggle?: () => void;
   onNavigate?: (path: string) => void;
   activePath?: string;
+  items?: Array<{
+    label: string;
+    path: string;
+    icon: keyof typeof iconComponents;
+  }>;
 }
+
+const iconComponents = {
+  Home: LayoutDashboard,
+  Users: Users,
+  BarChart: DollarSign,
+  Building2: Building2,
+  Package: Package,
+  Settings: Settings,
+  Help: HelpCircle
+};
 
 interface NavigationItem {
   icon: React.ReactNode;

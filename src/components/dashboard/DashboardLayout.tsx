@@ -5,6 +5,7 @@ import Navbar from "./Navbar";
 import DashboardContent from "./DashboardContent";
 import { useAuth } from "../../contexts/AuthContext";
 import { Toaster } from "sonner";
+import ErrorBoundary from "../ErrorBoundary";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -48,39 +49,26 @@ const DashboardLayout = ({
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`;
 
   return (
-    <div className="flex h-screen w-full bg-white dark:bg-gray-950">
-      <Toaster richColors position="top-right" />
-      {/* Sidebar */}
-      <div className="h-full">
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={handleToggleSidebar}
-          onNavigate={handleNavigate}
-          activePath={currentPath}
-          items={[
-            { label: "Início", path: "/dashboard", icon: "Home" },
-            { label: "Clientes", path: "/customers", icon: "Users" },
-            { label: "Vendas", path: "/sales", icon: "BarChart" },
-            { label: "Imóveis", path: "/properties", icon: "Building2" },
-          ]}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
-        {/* Top Navbar */}
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={handleToggleSidebar}
+        currentPath={currentPath}
+        onNavigate={handleNavigate}
+      />
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar
-          onToggleSidebar={handleToggleSidebar}
           userName={displayName}
           userAvatar={avatarUrl}
-          onLogout={onLogout || handleLogout}
+          onLogout={handleLogout}
         />
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto">
-          {children ? children : <DashboardContent />}
+        <div className="flex-1 overflow-auto bg-gray-50 p-4">
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 };
